@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Club App - Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            min-height: 600px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-name {
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Navigation */
+        nav {
+            background: #f8f9fa;
+            padding: 0 30px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 0;
+        }
+
+        .nav-item {
+            padding: 16px 24px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .nav-item:hover {
+            background: #e9ecef;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+
+        /* Main Content */
+        main {
+            padding: 40px 30px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Home/Current Book Screen */
+        .current-book-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 40px;
+            color: white;
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .book-cover-large {
+            width: 200px;
+            height: 300px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #999;
+            flex-shrink: 0;
+        }
+
+        .current-book-info h2 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .current-book-info .author {
+            font-size: 20px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .meeting-date {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .meeting-date strong {
+            font-weight: 600;
+        }
+
+        .meeting-location {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-top: 10px;
+            margin-left: 10px;
+        }
+
+        .meeting-location strong {
+            font-weight: 600;
+        }
+
+        .description {
+            line-height: 1.6;
+            margin-top: 20px;
+            opacity: 0.95;
+        }
+
+        /* Past Books Grid */
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .book-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .book-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .book-cover-small {
+            width: 100%;
+            height: 200px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .book-card h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: #212529;
+        }
+
+        .book-card .author {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .book-card .date-read {
+            font-size: 12px;
+            color: #adb5bd;
+            margin-bottom: 10px;
+        }
+
+        .rating-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stars {
+            color: #ffc107;
+            font-size: 18px;
+        }
+
+        .rating-text {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        /* Future Shelf */
+        .add-book-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 30px;
+            transition: background 0.3s;
+        }
+
+        .add-book-btn:hover {
+            background: #5568d3;
+        }
+
+        .future-books-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .future-book-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .book-cover-tiny {
+            width: 80px;
+            height: 120px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 10px;
+        }
+
+        .future-book-details {
+            flex-grow: 1;
+        }
+
+        .future-book-details h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .future-book-details .author {
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .suggested-by {
+            font-size: 13px;
+            color: #adb5bd;
+        }
+
+        .vote-btn {
+            background: #f0f0ff;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .vote-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .vote-btn.voted {
+            background: #667eea;
+            color: white;
+        }
+
+        .vote-btn.voted:hover {
+            background: #f0f0ff;
+            color: #667eea;
+        }
+
+        .vote-count {
+            font-size: 13px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        /* Book Detail Screen */
+        .book-detail {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .back-btn {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 30px;
+            display: inline-block;
+        }
+
+        .back-btn:hover {
+            background: #e9ecef;
+        }
+
+        .book-detail-header {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .book-detail-info {
+            flex-grow: 1;
+        }
+
+        .book-detail-info h2 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #212529;
+        }
+
+        .book-detail-info .author {
+            font-size: 20px;
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+
+        .book-detail-info .date-read {
+            font-size: 14px;
+            color: #adb5bd;
+            margin-bottom: 30px;
+        }
+
+        .average-rating {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .average-rating h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .average-rating .stars {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .average-rating .rating-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        /* Rating Section */
+        .ratings-section {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 30px;
+        }
+
+        .ratings-section h3 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #212529;
+        }
+
+        .your-rating {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .your-rating h4 {
+            font-size: 14px;
+            margin-bottom: 15px;
+            color: #6c757d;
+        }
+
+        .star-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .star-btn {
+            font-size: 32px;
+            cursor: pointer;
+            color: #dee2e6;
+            transition: color 0.2s;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .star-btn:hover,
+        .star-btn.active {
+            color: #ffc107;
+        }
+
+        .member-ratings {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .member-rating {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .member-name {
+            font-weight: 500;
+            color: #212529;
+        }
+
+        .member-stars {
+            color: #ffc107;
+            font-size: 18px;
+        }
+
+        /* Login Screen */
+        .login-container {
+            max-width: 400px;
+            margin: 60px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #212529;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            background: #5568d3;
+        }
+
+        /* Admin Controls */
+        .admin-edit-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+
+        .admin-edit-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h3 {
+            font-size: 24px;
+            color: #212529;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            color: #212529;
+        }
+
+        .modal-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .modal-tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-size: 14px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .modal-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .modal .form-group {
+            margin-bottom: 20px;
+        }
+
+        .modal .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .modal .form-group input,
+        .modal .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .modal .form-group input:focus,
+        .modal .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .future-books-select {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .future-book-option {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .future-book-option:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .future-book-option.selected {
+            border-color: #667eea;
+            background: #e7f5ff;
+        }
+
+        .future-book-option h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #212529;
+        }
+
+        .future-book-option .author {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn-primary {
+            flex: 1;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            background: #f8f9fa;
+            color: #495057;
+            border: 1px solid #e9ecef;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .help-text {
+            font-size: 13px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .current-book-hero {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .book-detail-header {
+                flex-direction: column;
+            }
+
+            .books-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 20px;
+            }
+
+            nav {
+                overflow-x: auto;
+            }
+
+            .meeting-location {
+                margin-left: 0;
+                display: block;
+                width: 100%;
+            }
+
+            .meeting-date {
+                display: block;
+                width: 100%;
+            }
+        }
+
+        /* Past Books Carousel on Home */
+        .past-books-section {
+            margin-top: 50px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-header h3 {
+            font-size: 24px;
+            color: #212529;
+        }
+
+        .view-all-btn {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .view-all-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .carousel-container {
+            position: relative;
+        }
+
+        .carousel {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding-bottom: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: #667eea #f8f9fa;
+        }
+
+        .carousel::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .carousel::-webkit-scrollbar-track {
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .carousel::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        .carousel::-webkit-scrollbar-thumb:hover {
+            background: #5568d3;
+        }
+
+        .carousel-book-card {
+            min-width: 250px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .carousel-book-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>📚 Book Club</h1>
+            <div class="user-info">
+                <span class="user-name">Welcome, Admin</span>
+                <button class="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav>
+            <div class="nav-item active" onclick="showScreen('home')">Home</div>
+            <div class="nav-item" onclick="showScreen('past')">Past Books</div>
+            <div class="nav-item" onclick="showScreen('future')">Future Shelf</div>
+        </nav>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Home/Current Book Screen -->
+            <div id="home" class="screen active">
+                <div class="current-book-hero">
+                    <div class="book-cover-large">Book Cover</div>
+                    <div class="current-book-info">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <h2 style="margin: 0;">The Midnight Library</h2>
+                            <button class="admin-edit-btn" onclick="openEditCurrentBook()">✏️ Edit</button>
+                        </div>
+                        <div class="author">by Matt Haig</div>
+                        <div class="meeting-date">
+                            <strong>Book Club Date:</strong> February 28, 2026
+                        </div>
+                        <div class="meeting-location">
+                            <strong>📍 Location:</strong> Sarah's House, 123 Oak Street
+                        </div>
+                        <div class="description">
+                            Between life and death there is a library, and within that library, the shelves go on forever. 
+                            Every book provides a chance to try another life you could have lived. To see how things would be 
+                            if you had made other choices... Would you have done anything different, if you had the chance to undo your regrets?
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; color: #6c757d; margin-bottom: 50px;">
+                    <p>Join us for our discussion on <strong>February 28, 2026</strong></p>
+                </div>
+
+                <!-- Past Books Carousel -->
+                <div class="past-books-section">
+                    <div class="section-header">
+                        <h3>Recently Read</h3>
+                        <button class="view-all-btn" onclick="showScreen('past')">View All Past Books</button>
+                    </div>
+                    
+                    <div class="carousel-container">
+                        <div class="carousel">
+                            <div class="carousel-book-card" onclick="showBookDetail('atomic-habits')">
+                                <div class="book-cover-small">Book Cover</div>
+                                <h3>Atomic Habits</h3>
+                                <div class="author">by James Clear</div>
+                                <div class="date-read">Read: December 2025</div>
+                                <div class="rating-display">
+                                    <span class="stars">★★★★★</span>
+                                    <span class="rating-text">4.8 (8 ratings)</span>
+                                </div>
+                            </div>
+
+                            <div class="carousel-book-card" onclick="showBookDetail('educated')">
+                                <div class="book-cover-small">Book Cover</div>
+                                <h3>Educated</h3>
+                                <div class="author">by Tara Westover</div>
+                                <div class="date-read">Read: October 2025</div>
+                                <div class="rating-display">
+                                    <span class="stars">★★★★★</span>
+                                    <span class="rating-text">4.6 (9 ratings)</span>
+                                </div>
+                            </div>
+
+                            <div class="carousel-book-card" onclick="showBookDetail('project-hail-mary')">
+                                <div class="book-cover-small">Book Cover</div>
+                                <h3>Project Hail Mary</h3>
+                                <div class="author">by Andy Weir</div>
+                                <div class="date-read">Read: August 2025</div>
+                                <div class="rating-display">
+                                    <span class="stars">★★★★☆</span>
+                                    <span class="rating-text">4.4 (10 ratings)</span>
+                                </div>
+                            </div>
+
+                            <div class="carousel-book-card">
+                                <div class="book-cover-small">Book Cover</div>
+                                <h3>The Four Winds</h3>
+                                <div class="author">by Kristin Hannah</div>
+                                <div class="date-read">Read: June 2025</div>
+                                <div class="rating-display">
+                                    <span class="stars">★★★★☆</span>
+                                    <span class="rating-text">4.2 (8 ratings)</span>
+                                </div>
+                            </div>
+
+                            <div class="carousel-book-card">
+                                <div class="book-cover-small">Book Cover</div>
+                                <h3>Klara and the Sun</h3>
+                                <div class="author">by Kazuo Ishiguro</div>
+                                <div class="date-read">Read: April 2025</div>
+                                <div class="rating-display">
+                                    <span class="stars">★★★☆☆</span>
+                                    <span class="rating-text">3.9 (7 ratings)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Past Books Screen -->
+            <div id="past" class="screen">
+                <h2 style="margin-bottom: 30px; color: #212529;">Past Books</h2>
+                <div class="future-books-list">
+                    <div class="future-book-item" onclick="showBookDetail('atomic-habits')" style="cursor: pointer;">
+                        <div class="book-cover-tiny">Cover</div>
+                        <div class="future-book-details">
+                            <h3>Atomic Habits</h3>
+                            <div class="author">by James Clear</div>
+                            <div class="suggested-by">Read: December 2025</div>
+                            <div class="rating-display" style="margin-top: 8px;">
+                                <span class="stars">★★★★★</span>
+                                <span class="rating-text">4.8 (8 ratings)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="future-book-item" onclick="showBookDetail('educated')" style="cursor: pointer;">
+                        <div class="book-cover-tiny">Cover</div>
+                        <div class="future-book-details">
+                            <h3>Educated</h3>
+                            <div class="author">by Tara Westover</div>
+                            <div class="suggested-by">Read: October 2025</div>
+                            <div class="rating-display" style="margin-top: 8px;">
+                                <span class="stars">★★★★★</span>
+                                <span class="rating-text">4.6 (9 ratings)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="future-book-item" onclick="showBookDetail('project-hail-mary')" style="cursor: pointer;">
+                        <div class="book-cover-tiny">Cover</div>
+                        <div class="future-book-details">
+                            <h3>Project Hail Mary</h3>
+                            <div class="author">by Andy Weir</div>
+                            <div class="suggested-by">Read: August 2025</div>
+                            <div class="rating-display" style="margin-top: 8px;">
+                                <span class="stars">★★★★☆</span>
+                                <span class="rating-text">4.4 (10 ratings)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="future-book-item" style="cursor: pointer;">
+                        <div class="book-cover-tiny">Cover</div>
+                        <div class="future-book-details">
+                            <h3>The Four Winds</h3>
+                            <div class="author">by Kristin Hannah</div>
+                            <div class="suggested-by">Read: June 2025</div>
+                            <div class="rating-display" style="margin-top: 8px;">
+                                <span class="stars">★★★★☆</span>
+                                <span class="rating-text">4.2 (8 ratings)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="future-book-item" style="cursor: pointer;">
+                        <div class="book-cover-tiny">Cover</div>
+                        <div class="future-book-details">
+                            <h3>Klara and the Sun</h3>
+                            <div class="author">by Kazuo Ishiguro</div>
+                            <div class="suggested-by">Read: April 2025</div>
+                            <div class="rating-display" style="margin-top: 8px;">
+                                <span class="stars">★★★☆☆</span>
+                                <span class="rating-text">3.9 (7 ratings)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="future-book-item" style="cursor: pointer;">
+                        <div class="book-cover-tiny">Cover</div>
+                        <div class="future-book-details">
+                            <h3>The Vanishing Half</h3>
+                            <div class="author">by Brit Bennett</div>
+                            <div class="suggested-by">Read: February 2025</div>
+                            <div class="rating-display" style="margin-top: 8px;">
+                                <span class="stars">★★★★☆</span>
+                                <span class="rating-text">4.3 (9 ratings)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Future Shelf Screen -->
+            <div id="future" class="screen">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2 style="color: #212529;">Future Shelf</h2>
+                    <button class="add-book-btn" onclick="openAddBookModal()">+ Add Book Suggestion</button>
+                </div>
+                
+                <div class="future-books-list">
+                    <div class="future-book-item">
+                        <div class="book-cover-tiny">Cover</div>
+                        <div class="future-book-details">
+                            <h3>Tomorrow, and Tomorrow, and Tomorrow</h3>
+                            <div class="author">by Gabrielle Zevin</div>
+                            <div class="suggested-by">Suggested by Sarah • Jan 15, 2026</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
+                            <button class="vote-btn" onclick="toggleVote(this)">▲ Vote</button>
+                            <span class="vote-count">4 votes</span>
+                        </div>
+                    </div>
+
+                    <div class="future-book-item">
+                        <div class="book-cover-tiny">Cover</div>
+                        <div class="future-book-details">
+                            <h3>The Seven Husbands of Evelyn Hugo</h3>
+                            <div class="author">by Taylor Jenkins Reid</div>
+                            <div class="suggested-by">Suggested by Emma • Jan 10, 2026</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
+                            <button class="vote-btn voted" onclick="toggleVote(this)">▲ Voted!</button>
+                            <span class="vote-count">3 votes</span>
+                        </div>
+                    </div>
+
+                    <div class="future-book-item">
+                        <div class="book-cover-tiny">Cover</div>
+                        <div class="future-book-details">
+                            <h3>Lessons in Chemistry</h3>
+                            <div class="author">by Bonnie Garmus</div>
+                            <div class="suggested-by">Suggested by Admin • Jan 8, 2026</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
+                            <button class="vote-btn" onclick="toggleVote(this)">▲ Vote</button>
+                            <span class="vote-count">6 votes</span>
+                        </div>
+                    </div>
+
+                    <div class="future-book-item">
+                        <div class="book-cover-tiny">Cover</div>
+                        <div class="future-book-details">
+                            <h3>The House in the Cerulean Sea</h3>
+                            <div class="author">by TJ Klune</div>
+                            <div class="suggested-by">Suggested by Michael • Dec 28, 2025</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;">
+                            <button class="vote-btn" onclick="toggleVote(this)">▲ Vote</button>
+                            <span class="vote-count">2 votes</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Book Detail Screen -->
+            <div id="book-detail" class="screen">
+                <div class="book-detail">
+                    <button class="back-btn" onclick="showScreen('past')">← Back to Past Books</button>
+                    
+                    <div class="book-detail-header">
+                        <div class="book-cover-large">Book Cover</div>
+                        <div class="book-detail-info">
+                            <h2 id="detail-title">Atomic Habits</h2>
+                            <div class="author" id="detail-author">by James Clear</div>
+                            <div class="date-read" id="detail-date">Read: December 2025</div>
+                            
+                            <div class="average-rating">
+                                <h3>Average Rating</h3>
+                                <div class="stars">★★★★★</div>
+                                <span class="rating-value">4.8 / 5.0</span>
+                                <div style="margin-top: 5px; font-size: 14px; color: #6c757d;">8 members rated</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ratings-section">
+                        <h3>Ratings</h3>
+                        
+                        <div class="your-rating">
+                            <h4>Your Rating</h4>
+                            <div class="star-input">
+                                <button class="star-btn" onclick="setRating(1)">★</button>
+                                <button class="star-btn" onclick="setRating(2)">★</button>
+                                <button class="star-btn" onclick="setRating(3)">★</button>
+                                <button class="star-btn" onclick="setRating(4)">★</button>
+                                <button class="star-btn active" onclick="setRating(5)">★</button>
+                            </div>
+                        </div>
+
+                        <h4 style="margin-bottom: 15px; color: #6c757d;">Member Ratings</h4>
+                        <div class="member-ratings">
+                            <div class="member-rating">
+                                <span class="member-name">Admin (You)</span>
+                                <span class="member-stars">★★★★★</span>
+                            </div>
+                            <div class="member-rating">
+                                <span class="member-name">Sarah</span>
+                                <span class="member-stars">★★★★★</span>
+                            </div>
+                            <div class="member-rating">
+                                <span class="member-name">Emma</span>
+                                <span class="member-stars">★★★★★</span>
+                            </div>
+                            <div class="member-rating">
+                                <span class="member-name">Michael</span>
+                                <span class="member-stars">★★★★☆</span>
+                            </div>
+                            <div class="member-rating">
+                                <span class="member-name">David</span>
+                                <span class="member-stars">★★★★★</span>
+                            </div>
+                            <div class="member-rating">
+                                <span class="member-name">Lisa</span>
+                                <span class="member-stars">★★★★★</span>
+                            </div>
+                            <div class="member-rating">
+                                <span class="member-name">Jennifer</span>
+                                <span class="member-stars">★★★★☆</span>
+                            </div>
+                            <div class="member-rating">
+                                <span class="member-name">Robert</span>
+                                <span class="member-stars">★★★★★</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Current Book Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Set Current Book</h3>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+
+            <div class="modal-tabs">
+                <button class="modal-tab active" onclick="switchTab('future-shelf-tab')">From Future Shelf</button>
+                <button class="modal-tab" onclick="switchTab('search-tab')">Search Books</button>
+                <button class="modal-tab" onclick="switchTab('manual-tab')">Manual Entry</button>
+            </div>
+
+            <!-- Tab 1: Select from Future Shelf -->
+            <div id="future-shelf-tab" class="tab-content active">
+                <p style="color: #6c757d; margin-bottom: 20px;">Select a book from your future reading list:</p>
+                <div class="future-books-select">
+                    <div class="future-book-option" onclick="selectFutureBook(this)">
+                        <h4>Tomorrow, and Tomorrow, and Tomorrow</h4>
+                        <div class="author">by Gabrielle Zevin</div>
+                    </div>
+                    <div class="future-book-option" onclick="selectFutureBook(this)">
+                        <h4>The Seven Husbands of Evelyn Hugo</h4>
+                        <div class="author">by Taylor Jenkins Reid</div>
+                    </div>
+                    <div class="future-book-option" onclick="selectFutureBook(this)">
+                        <h4>Lessons in Chemistry</h4>
+                        <div class="author">by Bonnie Garmus</div>
+                    </div>
+                    <div class="future-book-option" onclick="selectFutureBook(this)">
+                        <h4>The House in the Cerulean Sea</h4>
+                        <div class="author">by TJ Klune</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 25px; padding-top: 25px; border-top: 1px solid #e9ecef;">
+                    <div class="form-group">
+                        <label>Book Club Meeting Date *</label>
+                        <input type="date">
+                    </div>
+                    <div class="form-group">
+                        <label>Meeting Location *</label>
+                        <input type="text" placeholder="e.g., Sarah's House, 123 Oak Street">
+                        <div class="help-text">Where will the book club meet to discuss this book?</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Search for Books -->
+            <div id="search-tab" class="tab-content">
+                <div class="form-group">
+                    <label>Search by Title or Author</label>
+                    <input type="text" placeholder="e.g., The Great Gatsby or F. Scott Fitzgerald">
+                    <div class="help-text">Search results would appear here using Google Books API</div>
+                </div>
+                <button class="btn-primary" style="width: 100%; margin-bottom: 20px;">Search</button>
+                
+                <div class="form-group">
+                    <label>Book Club Meeting Date *</label>
+                    <input type="date">
+                </div>
+                <div class="form-group">
+                    <label>Meeting Location *</label>
+                    <input type="text" placeholder="e.g., Sarah's House, 123 Oak Street">
+                    <div class="help-text">Where will the book club meet to discuss this book?</div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Manual Entry -->
+            <div id="manual-tab" class="tab-content">
+                <div class="form-group">
+                    <label>Book Title *</label>
+                    <input type="text" placeholder="Enter book title">
+                </div>
+                <div class="form-group">
+                    <label>Author *</label>
+                    <input type="text" placeholder="Enter author name">
+                </div>
+                <div class="form-group">
+                    <label>Book Club Meeting Date *</label>
+                    <input type="date">
+                </div>
+                <div class="form-group">
+                    <label>Meeting Location *</label>
+                    <input type="text" placeholder="e.g., Sarah's House, 123 Oak Street">
+                    <div class="help-text">Where will the book club meet to discuss this book?</div>
+                </div>
+                <div class="form-group">
+                    <label>Description (Optional)</label>
+                    <textarea placeholder="Enter a brief description or synopsis"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Cover Image URL (Optional)</label>
+                    <input type="text" placeholder="https://example.com/cover.jpg">
+                    <div class="help-text">Or leave blank to use a placeholder</div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveCurrentBook()">Set as Current Book</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Book Suggestion Modal -->
+    <div id="addBookModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Book Suggestion</h3>
+                <button class="close-modal" onclick="closeAddBookModal()">×</button>
+            </div>
+
+            <div class="modal-tabs">
+                <button class="modal-tab active" onclick="switchAddBookTab('add-search-tab')">Search Books</button>
+                <button class="modal-tab" onclick="switchAddBookTab('add-manual-tab')">Manual Entry</button>
+            </div>
+
+            <!-- Tab 1: Search for Books -->
+            <div id="add-search-tab" class="tab-content active">
+                <div class="form-group">
+                    <label>Search by Title or Author</label>
+                    <input type="text" id="addBookSearch" placeholder="e.g., The Great Gatsby or F. Scott Fitzgerald">
+                    <div class="help-text">Search results would appear here using Google Books API</div>
+                </div>
+                <button class="btn-primary" style="width: 100%; margin-bottom: 20px;">Search</button>
+                
+                <div class="form-group">
+                    <label>Why are you suggesting this book? (Optional)</label>
+                    <textarea placeholder="Tell the group why you think they'll enjoy this book..."></textarea>
+                </div>
+            </div>
+
+            <!-- Tab 2: Manual Entry -->
+            <div id="add-manual-tab" class="tab-content">
+                <div class="form-group">
+                    <label>Book Title *</label>
+                    <input type="text" placeholder="Enter book title">
+                </div>
+                <div class="form-group">
+                    <label>Author *</label>
+                    <input type="text" placeholder="Enter author name">
+                </div>
+                <div class="form-group">
+                    <label>Why are you suggesting this book? (Optional)</label>
+                    <textarea placeholder="Tell the group why you think they'll enjoy this book..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Cover Image URL (Optional)</label>
+                    <input type="text" placeholder="https://example.com/cover.jpg">
+                    <div class="help-text">Or leave blank to use a placeholder</div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeAddBookModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveBookSuggestion()">Add to Future Shelf</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Navigation between screens
+        function showScreen(screenId) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Remove active class from nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected screen
+            document.getElementById(screenId).classList.add('active');
+            
+            // Update nav highlight
+            if (screenId === 'home') {
+                document.querySelector('.nav-item:nth-child(1)').classList.add('active');
+            } else if (screenId === 'past') {
+                document.querySelector('.nav-item:nth-child(2)').classList.add('active');
+            } else if (screenId === 'future') {
+                document.querySelector('.nav-item:nth-child(3)').classList.add('active');
+            }
+        }
+
+        // Show book detail
+        const bookData = {
+            'atomic-habits': {
+                title: 'Atomic Habits',
+                author: 'by James Clear',
+                date: 'Read: December 2025'
+            },
+            'educated': {
+                title: 'Educated',
+                author: 'by Tara Westover',
+                date: 'Read: October 2025'
+            },
+            'project-hail-mary': {
+                title: 'Project Hail Mary',
+                author: 'by Andy Weir',
+                date: 'Read: August 2025'
+            }
+        };
+
+        function showBookDetail(bookId) {
+            const book = bookData[bookId];
+            if (book) {
+                document.getElementById('detail-title').textContent = book.title;
+                document.getElementById('detail-author').textContent = book.author;
+                document.getElementById('detail-date').textContent = book.date;
+            }
+            
+            // Hide all screens and nav active states
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show book detail screen
+            document.getElementById('book-detail').classList.add('active');
+        }
+
+        // Rating functionality
+        function setRating(stars) {
+            const starButtons = document.querySelectorAll('.star-btn');
+            starButtons.forEach((btn, index) => {
+                if (index < stars) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function toggleVote(btn) {
+            const countEl = btn.nextElementSibling;
+            let count = parseInt(countEl.textContent);
+            if (btn.classList.contains('voted')) {
+                btn.classList.remove('voted');
+                btn.textContent = '▲ Vote';
+                countEl.textContent = (count - 1) + ' votes';
+            } else {
+                btn.classList.add('voted');
+                btn.textContent = '▲ Voted!';
+                countEl.textContent = (count + 1) + ' votes';
+            }
+        }
+
+        // Initialize with 5 stars selected
+        setRating(5);
+
+        // Modal functions
+        function openEditCurrentBook() {
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function switchTab(tabId) {
+            // Remove active from all tabs
+            document.querySelectorAll('.modal-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Add active to selected tab
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function selectFutureBook(element) {
+            // Remove selected from all options
+            document.querySelectorAll('.future-book-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            // Add selected to clicked option
+            element.classList.add('selected');
+        }
+
+        function saveCurrentBook() {
+            alert('In the real app, this would:\n1. Move the current book to Past Books\n2. Set the selected book as the new Current Book\n3. Update the meeting date\n4. Remove it from Future Shelf (if applicable)');
+            closeModal();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Add Book Modal functions
+        function openAddBookModal() {
+            document.getElementById('addBookModal').classList.add('active');
+        }
+
+        function closeAddBookModal() {
+            document.getElementById('addBookModal').classList.remove('active');
+        }
+
+        function switchAddBookTab(tabId) {
+            // Remove active from all tabs in add book modal
+            document.querySelectorAll('#addBookModal .modal-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('#addBookModal .tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Add active to selected tab
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function saveBookSuggestion() {
+            alert('In the real app, this would:\n1. Add the book to the Future Shelf\n2. Mark it as suggested by you\n3. Include your note about why you suggested it\n4. Notify other members (optional)');
+            closeAddBookModal();
+        }
+
+        // Close add book modal when clicking outside
+        document.getElementById('addBookModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddBookModal();
+            }
+        });
+    </script>
+</body>
+</html>
