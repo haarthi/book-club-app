@@ -114,19 +114,12 @@ export default function HomePage() {
     setManualTitle(book.title)
     setManualAuthor(book.author)
     setManualReason('')
-    setManualDescription('')
-    setManualGenre('')
+    setManualDescription(book.description || '')
+    setManualGenre(book.genre || '')
+    setManualCoverUrl(book.thumbnail || '')
     setEditTab('manual')
     setSearchResults([])
     setSearchQuery('')
-
-    // Fetch cover from Open Library
-    const coverUrl = await fetchBookCover({
-      isbn: book.isbn,
-      title: book.title,
-      author: book.author,
-    })
-    setManualCoverUrl(coverUrl || '')
   }
 
   const handleSetCurrentBook = async () => {
@@ -398,8 +391,8 @@ export default function HomePage() {
                   style={{ display: 'flex', gap: 10, padding: 10, borderBottom: '1px solid #eee', cursor: 'pointer' }}
                   onClick={() => selectSearchResult(book)}
                 >
-                  {book.coverId && (
-                    <img src={`https://covers.openlibrary.org/b/id/${book.coverId}-S.jpg`} alt={book.title} style={{ width: 40, height: 60, objectFit: 'cover' }} />
+                  {book.thumbnail && (
+                    <img src={book.thumbnail} alt={book.title} style={{ width: 40, height: 60, objectFit: 'cover', borderRadius: 4 }} />
                   )}
                   <div>
                     <h4 style={{ margin: '0 0 5px 0' }}>{book.title}</h4>

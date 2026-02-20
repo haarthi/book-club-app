@@ -1,35 +1,46 @@
 import { supabase } from './supabase'
 
 /**
- * Search Open Library for books by query string.
- * No API key needed — completely free.
+ * Search Google Books API for books by query string.
+ * Uses the VITE_GOOGLE_BOOKS_API_KEY from .env.
  */
 export const searchBooks = async (query) => {
     if (!query) return []
 
     try {
-        const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=10&fields=key,title,author_name,first_publish_year,isbn,cover_i`
-        console.log('[Search] Open Library URL:', url)
+        const apiKey = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY
+        const url = apiKey
+            ? `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=10&key=${apiKey}`
+            : `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=10`
+        console.log('[Search] Google Books URL:', url)
 
         const response = await fetch(url)
         if (!response.ok) {
-            console.warn('[Search] Open Library returned', response.status)
+            console.warn('[Search] Google Books returned', response.status)
             return []
         }
 
         const data = await response.json()
-        if (!data.docs || data.docs.length === 0) return []
+        if (!data.items || data.items.length === 0) return []
 
-        return data.docs.map((doc) => ({
-            id: doc.key,
-            title: doc.title,
-            author: doc.author_name ? doc.author_name.join(', ') : 'Unknown Author',
-            isbn: doc.isbn?.[0] || null,
-            coverId: doc.cover_i || null,
-            publishedYear: doc.first_publish_year || null,
-        }))
+        return data.items.map((item) => {
+            const info = item.volumeInfo || {}
+            const isbn13 = info.industryIdentifiers?.find(id => id.type === 'ISBN_13')?.identifier
+            const isbn10 = info.industryIdentifiers?.find(id => id.type === 'ISBN_10')?.identifier
+
+            return {
+                id: item.id,
+                title: info.title || 'Untitled',
+                author: info.authors ? info.authors.join(', ') : 'Unknown Author',
+                isbn: isbn13 || isbn10 || null,
+                thumbnail: info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || null,
+                description: info.description ? info.description.substring(0, 500) : '',
+                genre: info.categories?.[0] || '',
+                publishedYear: info.publishedDate ? info.publishedDate.substring(0, 4) : null,
+            }
+        })
     } catch (error) {
-        console.error('[Search] Error searching Open Library:', error)
+        console.error('[Search] Error searching Google Books:', error)
         return []
     }
 }
