@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { searchBooks, fetchBookCover, fetchAndSaveCover } from '../lib/googleBooks'
+import { searchBooks, fetchBookCover, fetchAndSaveCover, fetchBookMetadata } from '../lib/googleBooks'
 import BookCover from '../components/ui/BookCover'
 import Modal from '../components/ui/Modal'
 
@@ -10,15 +10,18 @@ export default function FutureShelfPage() {
   const [addTab, setAddTab] = useState('search')
   const [session, setSession] = useState(null)
 
-  // Search state
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
+  const [selectedBook, setSelectedBook] = useState(null)
+  const [searchReason, setSearchReason] = useState('')
 
   // Manual entry state
   const [manualTitle, setManualTitle] = useState('')
   const [manualAuthor, setManualAuthor] = useState('')
   const [manualDescription, setManualDescription] = useState('')
+  const [manualGenre, setManualGenre] = useState('')
+  const [manualReason, setManualReason] = useState('')
   const [manualCoverUrl, setManualCoverUrl] = useState('')
 
   useEffect(() => {
@@ -95,21 +98,48 @@ export default function FutureShelfPage() {
     setIsSearching(false)
   }
 
-  const selectSearchResult = async (book) => {
-    setManualTitle(book.title)
-    setManualAuthor(book.author)
-    setManualDescription(book.description ? `About this book: ${book.description.substring(0, 150)}...` : '')
-    setAddTab('manual')
-    setSearchResults([])
-    setSearchQuery('')
+  const selectSearchResult = (book) => {
+    setSelectedBook(book)
+  }
 
-    // Fetch cover from Open Library
-    const coverUrl = await fetchBookCover({
-      isbn: book.isbn,
-      title: book.title,
-      author: book.author,
-    })
-    setManualCoverUrl(coverUrl || '')
+  const handleAddFromSearch = async () => {
+    if (!selectedBook) return
+    try {
+      // Resolve cover
+      const resolvedCoverUrl = await fetchBookCover({
+        isbn: selectedBook.isbn,
+        title: selectedBook.title,
+        author: selectedBook.author,
+      })
+
+      // Fetch description & genre from Google Books
+      const metadata = await fetchBookMetadata(selectedBook.title, selectedBook.author)
+
+      const { error } = await supabase
+        .from('books')
+        .insert({
+          title: selectedBook.title,
+          author: selectedBook.author,
+          user_recommended_reason: searchReason,
+          description: metadata.description,
+          genre: metadata.genre,
+          cover_image_url: resolvedCoverUrl || null,
+          status: 'future',
+          suggested_by: session.user.id
+        })
+
+      if (error) throw error
+
+      setAddModalOpen(false)
+      setSelectedBook(null)
+      setSearchReason('')
+      setSearchResults([])
+      setSearchQuery('')
+      fetchBooks(session.user.id)
+    } catch (error) {
+      console.error('Error adding book:', error)
+      alert('Failed to add book suggestion')
+    }
   }
 
   const handleAddBook = async () => {
@@ -124,12 +154,17 @@ export default function FutureShelfPage() {
         })
         console.log('[handleAddBook] Resolved cover URL:', resolvedCoverUrl)
 
+        // Fetch description & genre from Google Books (manual values override)
+        const metadata = await fetchBookMetadata(manualTitle, manualAuthor)
+
         const { error } = await supabase
           .from('books')
           .insert({
             title: manualTitle,
             author: manualAuthor,
-            description: manualDescription,
+            user_recommended_reason: manualReason,
+            description: manualDescription || metadata.description,
+            genre: manualGenre || metadata.genre,
             cover_image_url: resolvedCoverUrl || null,
             status: 'future',
             suggested_by: session.user.id
@@ -141,7 +176,9 @@ export default function FutureShelfPage() {
       setAddModalOpen(false)
       setManualTitle('')
       setManualAuthor('')
+      setManualReason('')
       setManualDescription('')
+      setManualGenre('')
       setManualCoverUrl('')
 
       fetchBooks(session.user.id)
@@ -180,9 +217,9 @@ export default function FutureShelfPage() {
                 <div className="suggested-by">
                   Suggested by {book.suggestedBy} &bull; {new Date(book.created_at).toLocaleDateString()}
                 </div>
-                {book.description && (
+                {book.user_recommended_reason && (
                   <div style={{ fontSize: '0.9rem', color: '#666', marginTop: 5 }}>
-                    &quot;{book.description}&quot;
+                    &quot;{book.user_recommended_reason}&quot;
                   </div>
                 )}
               </div>
@@ -249,32 +286,61 @@ export default function FutureShelfPage() {
                 </button>
               </div>
               <div className="help-text">
-                Search results using Google Books API
+                Search results using Open Library
               </div>
             </div>
 
-            <div className="search-results" style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 20 }}>
-              {searchResults.map((book) => (
-                <div
-                  key={book.id}
-                  style={{ display: 'flex', gap: 10, padding: 10, borderBottom: '1px solid #eee', cursor: 'pointer' }}
-                  onClick={() => selectSearchResult(book)}
-                >
-                  {book.coverId && (
-                    <img src={`https://covers.openlibrary.org/b/id/${book.coverId}-S.jpg`} alt={book.title} style={{ width: 40, height: 60, objectFit: 'cover' }} />
-                  )}
-                  <div>
-                    <h4 style={{ margin: '0 0 5px 0' }}>{book.title}</h4>
-                    <div style={{ fontSize: '0.9rem', color: '#666' }}>{book.author}</div>
+            {!selectedBook && (
+              <div className="search-results" style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 20 }}>
+                {searchResults.map((book) => (
+                  <div
+                    key={book.id}
+                    style={{ display: 'flex', gap: 10, padding: 10, borderBottom: '1px solid #eee', cursor: 'pointer' }}
+                    onClick={() => selectSearchResult(book)}
+                  >
+                    {book.coverId && (
+                      <img src={`https://covers.openlibrary.org/b/id/${book.coverId}-S.jpg`} alt={book.title} style={{ width: 40, height: 60, objectFit: 'cover' }} />
+                    )}
+                    <div>
+                      <h4 style={{ margin: '0 0 5px 0' }}>{book.title}</h4>
+                      <div style={{ fontSize: '0.9rem', color: '#666' }}>{book.author}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
-            <div className="form-group">
-              <label>Why are you suggesting this book? (Optional)</label>
-              <textarea placeholder="Tell the group why you think they'll enjoy this book..." />
-            </div>
+            {selectedBook && (
+              <div style={{ background: 'var(--bg-muted)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 16, marginBottom: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
+                  <div>
+                    <h4 style={{ margin: '0 0 4px 0', color: 'var(--text)' }}>{selectedBook.title}</h4>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{selectedBook.author}</div>
+                  </div>
+                  <button
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-muted)' }}
+                    onClick={() => setSelectedBook(null)}
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label>Why are you suggesting this book? (Optional)</label>
+                  <textarea
+                    placeholder="Tell the group why you think they'll enjoy this book..."
+                    value={searchReason}
+                    onChange={(e) => setSearchReason(e.target.value)}
+                  />
+                </div>
+                <button
+                  className="btn-primary"
+                  style={{ marginTop: 12 }}
+                  onClick={handleAddFromSearch}
+                >
+                  Add to Future Shelf
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -302,8 +368,25 @@ export default function FutureShelfPage() {
               <label>Why are you suggesting this book? (Optional)</label>
               <textarea
                 placeholder="Tell the group why you think they'll enjoy this book..."
+                value={manualReason}
+                onChange={(e) => setManualReason(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label>Description (Optional)</label>
+              <textarea
+                placeholder="A brief synopsis or summary of the book..."
                 value={manualDescription}
                 onChange={(e) => setManualDescription(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label>Genre (Optional)</label>
+              <input
+                type="text"
+                placeholder="e.g. Fiction, Memoir, Fantasy, Self-Help"
+                value={manualGenre}
+                onChange={(e) => setManualGenre(e.target.value)}
               />
             </div>
             <div className="form-group">
@@ -319,20 +402,22 @@ export default function FutureShelfPage() {
           </div>
         )}
 
-        <div className="modal-actions">
-          <button
-            className="btn-secondary"
-            onClick={() => setAddModalOpen(false)}
-          >
-            Cancel
-          </button>
-          <button
-            className="btn-primary"
-            onClick={handleAddBook}
-          >
-            Add to Future Shelf
-          </button>
-        </div>
+        {addTab === 'manual' && (
+          <div className="modal-actions">
+            <button
+              className="btn-secondary"
+              onClick={() => setAddModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn-primary"
+              onClick={handleAddBook}
+            >
+              Add to Future Shelf
+            </button>
+          </div>
+        )}
       </Modal>
     </>
   )

@@ -140,8 +140,11 @@ export default function BookDetailPage() {
         <div className="book-detail-info">
           <h2>{book.title}</h2>
           <div className="author">by {book.author}</div>
-          <div className="date-read">Read: {book.date_read}</div>
 
+          <div className="date-read">Read: {book.date_read}</div>
+          {book.description && (
+            <div className="description">{book.description}</div>
+          )}
           <div className="average-rating">
             <h3>Average Rating</h3>
             <StarDisplay rating={book.averageRating} />

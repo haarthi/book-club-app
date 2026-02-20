@@ -27,11 +27,54 @@ export const searchBooks = async (query) => {
             isbn: doc.isbn?.[0] || null,
             coverId: doc.cover_i || null,
             publishedYear: doc.first_publish_year || null,
-            description: '',
         }))
     } catch (error) {
         console.error('[Search] Error searching Open Library:', error)
         return []
+    }
+}
+
+/**
+ * Fetch book description and genre from Google Books API.
+ * Called once when a book is added — not on every search or page load.
+ */
+export const fetchBookMetadata = async (title, author) => {
+    try {
+        const apiKey = import.meta.env.VITE_GOOGLE_BOOKS_API_KEY
+        if (!apiKey) {
+            console.warn('[Metadata] No Google Books API key configured')
+            return { description: '', genre: '' }
+        }
+
+        const q = `intitle:${title}${author ? `+inauthor:${author}` : ''}`
+        const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=1&key=${apiKey}`
+        console.log('[Metadata] Fetching from Google Books:', url)
+
+        const response = await fetch(url)
+        if (!response.ok) {
+            console.warn('[Metadata] Google Books returned', response.status)
+            return { description: '', genre: '' }
+        }
+
+        const data = await response.json()
+        if (!data.items || data.items.length === 0) {
+            console.log('[Metadata] No results from Google Books')
+            return { description: '', genre: '' }
+        }
+
+        const info = data.items[0].volumeInfo
+        const description = info.description
+            ? info.description.substring(0, 500)
+            : ''
+        const genre = info.categories?.[0] || ''
+
+        console.log('[Metadata] ✅ description:', description.substring(0, 80) + '...')
+        console.log('[Metadata] ✅ genre:', genre)
+
+        return { description, genre }
+    } catch (error) {
+        console.error('[Metadata] Error fetching from Google Books:', error)
+        return { description: '', genre: '' }
     }
 }
 

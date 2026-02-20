@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { searchBooks, fetchBookCover, fetchAndSaveCover } from '../lib/googleBooks'
+import { searchBooks, fetchBookCover, fetchAndSaveCover, fetchBookMetadata } from '../lib/googleBooks'
 import BookCover from '../components/ui/BookCover'
 import { StarDisplay } from '../components/ui/StarRating'
 import Modal from '../components/ui/Modal'
@@ -30,6 +30,8 @@ export default function HomePage() {
   const [manualTitle, setManualTitle] = useState('')
   const [manualAuthor, setManualAuthor] = useState('')
   const [manualDescription, setManualDescription] = useState('')
+  const [manualGenre, setManualGenre] = useState('')
+  const [manualReason, setManualReason] = useState('')
   const [manualCoverUrl, setManualCoverUrl] = useState('')
 
   useEffect(() => {
@@ -111,7 +113,9 @@ export default function HomePage() {
   const selectSearchResult = async (book) => {
     setManualTitle(book.title)
     setManualAuthor(book.author)
-    setManualDescription(book.description)
+    setManualReason('')
+    setManualDescription('')
+    setManualGenre('')
     setEditTab('manual')
     setSearchResults([])
     setSearchQuery('')
@@ -156,12 +160,17 @@ export default function HomePage() {
           author: manualAuthor,
         })
 
+        // Fetch description & genre from Google Books (manual values override)
+        const metadata = await fetchBookMetadata(manualTitle, manualAuthor)
+
         const { error } = await supabase
           .from('books')
           .insert({
             title: manualTitle,
             author: manualAuthor,
-            description: manualDescription,
+            user_recommended_reason: manualReason,
+            description: manualDescription || metadata.description,
+            genre: manualGenre || metadata.genre,
             cover_image_url: resolvedCoverUrl || null,
             status: 'current',
             meeting_date: meetingDate,
@@ -192,6 +201,10 @@ export default function HomePage() {
           <>
             <BookCover url={currentBook.cover_image_url} title={currentBook.title} size="large" />
             <div className="current-book-info">
+              <div className="now-reading-label">
+                <span className="pulse-dot"></span>
+                Now Reading
+              </div>
               <div
                 style={{
                   display: 'flex',
@@ -212,10 +225,10 @@ export default function HomePage() {
               </div>
               <div className="author">by {currentBook.author}</div>
               <div className="meeting-date">
-                <strong>Book Club Date:</strong> {currentBook.meeting_date}
+                &#128197; {currentBook.meeting_date ? new Date(currentBook.meeting_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'TBD'}
               </div>
               <div className="meeting-location">
-                <strong>&#128205; Location:</strong> {currentBook.meeting_location}
+                &#128205; {currentBook.meeting_location || 'TBD'}
               </div>
               <div className="description">{currentBook.description}</div>
             </div>
@@ -235,15 +248,6 @@ export default function HomePage() {
           </div>
         )}
       </div>
-
-      {currentBook && (
-        <div style={{ textAlign: 'center', color: '#6c757d', marginBottom: 50 }}>
-          <p>
-            Join us for our discussion on{' '}
-            <strong>{currentBook.meeting_date}</strong>
-          </p>
-        </div>
-      )}
 
       {/* Past Books Carousel */}
       <div className="past-books-section">
@@ -469,11 +473,28 @@ export default function HomePage() {
               </div>
             </div>
             <div className="form-group">
+              <label>Why are you recommending this book? (Optional)</label>
+              <textarea
+                placeholder="Tell the group why you think they'll enjoy this book..."
+                value={manualReason}
+                onChange={(e) => setManualReason(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
               <label>Description (Optional)</label>
               <textarea
-                placeholder="Enter a brief description or synopsis"
+                placeholder="A brief synopsis or summary of the book..."
                 value={manualDescription}
                 onChange={(e) => setManualDescription(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label>Genre (Optional)</label>
+              <input
+                type="text"
+                placeholder="e.g. Fiction, Memoir, Fantasy, Self-Help"
+                value={manualGenre}
+                onChange={(e) => setManualGenre(e.target.value)}
               />
             </div>
             <div className="form-group">
